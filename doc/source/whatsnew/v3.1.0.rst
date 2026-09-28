@@ -1329,13 +1329,11 @@ Sparse
 ExtensionArray
 ^^^^^^^^^^^^^^
 - :func:`api.extensions.register_extension_dtype` now raises an informative ``TypeError`` at registration when the :class:`~pandas.api.extensions.ExtensionDtype` subclass does not define a string ``name`` attribute, instead of a bare ``AssertionError`` when the dtype is later used (:issue:`46093`)
-- An iterator that happened to match the operand's length was consumed and computed elementwise for a ``Sparse`` dtype and for :class:`~pandas.api.extensions.ExtensionScalarOpsMixin`-based arrays, and :class:`ArrowDtype` arithmetic looped forever on an endless one; all of these now treat it as scalar-like (:issue:`31646`)
 - Bug in :meth:`DataFrame.any` and :meth:`DataFrame.all` with ``skipna=False`` not propagating ``pd.NA`` on numpy-nullable columns (``boolean``, ``Int*``, ``UInt*``, ``Float*``); ``axis=0`` raised ``ValueError`` and ``axis=1`` returned a concrete ``True``/``False`` (:issue:`65710`)
 - Bug in arithmetic, comparison, and logical operations between PyArrow-backed or :class:`StringDtype` data and a two-dimensional operand raising an assortment of internal or misleading errors, or silently returning a wrong result; these now raise ``NotImplementedError`` (:issue:`62682`)
 - Bug in comparisons between PyArrow-backed data and a differently-sized array or list raising ``pyarrow.ArrowInvalid`` instead of reporting the length mismatch (:issue:`62682`)
 - Bug in comparisons between a PyArrow-backed :class:`Series` or :class:`Index` and a :py:class:`range` returning all-``False`` for ``==`` and raising ``TypeError`` for ``<``/``>``, instead of comparing elementwise like the NumPy-backed and nullable equivalents; mismatched lengths now raise ``ValueError`` (:issue:`67979`)
 - Bug in numpy ufuncs like :func:`numpy.isnan` raising ``TypeError`` on :class:`Series` or :class:`Index` backed by PyArrow dtypes when ``future.distinguish_nan_and_na`` is ``True`` (:issue:`62506`)
-- Bug in operations between an iterator (e.g. a generator) and an :class:`~pandas.api.extensions.ExtensionArray`, including an EA-backed :class:`Series` or :class:`Index`, raising instead of treating it as scalar-like the way NumPy dtypes already do (:issue:`31646`)
 - Bug in the :class:`Series` constructor with an index but no data raising ``RecursionError`` for an :class:`~pandas.api.extensions.ExtensionDtype` whose ``na_value`` is dict-like, e.g. a nested or arrow-backed dtype (:issue:`33900`, :issue:`41377`)
 - Bug in :attr:`Series.list` raising error when using negative indices with PyArrow list dtypes (:issue:`63221`)
 - Bug in the ``prod``, ``mean``, ``median``, ``std``, ``var``, ``sem``, ``skew`` and ``kurt`` methods of a :class:`.StringArray` (and ``np.prod``, ``np.mean``, ``np.std`` and ``np.var``, which dispatch to them) not rejecting the string dtype, returning a value or raising an unrelated error instead of the ``TypeError`` the equivalent :class:`Series` reduction raises (:issue:`68389`)
@@ -1353,7 +1351,6 @@ Styler
 Other
 ^^^^^
 
-- Bug in :class:`DataFrame` comparison and arithmetic with an iterator (e.g. a generator) raising ``TypeError`` on the iterator's missing length instead of treating it as scalar-like the way a NumPy-dtype :class:`Series` already did (:issue:`31646`)
 - Bug in :class:`DataFrame` constructor where passing the same :class:`Index` object as both ``index`` and ``columns`` shared a single object between the two axes, so mutating metadata such as ``names`` on one would also change the other (:issue:`42934`)
 - Bug in :func:`eval` and :meth:`DataFrame.eval` where passing a :class:`Series` or :class:`DataFrame` as ``expr`` silently parsed its (possibly truncated) repr instead of raising, producing a confusing error (:issue:`16289`)
 - Bug in :func:`eval`, :meth:`DataFrame.eval` and :meth:`DataFrame.query` raising instead of evaluating a subscript expression such as ``"a.str[-1:] == 'c'"`` (:issue:`49905`)
@@ -1376,6 +1373,7 @@ Other
 - Bug in :meth:`Series.transform` and :meth:`DataFrame.transform` where passing a list of duplicate function names did not raise :class:`errors.SpecificationError` (:issue:`54929`)
 - Bug in ``&``, ``|`` and ``^`` between a :class:`Series`, :class:`Index` or :class:`DataFrame` and an object that is neither list-like nor a recognized scalar raising a bare ``AssertionError`` instead of ``TypeError`` (:issue:`31646`)
 - Bug in ``register_option`` where registering an option whose name was a prefix of an existing option (e.g. ``"a.b"`` when ``"a.b.c"`` was already registered) silently overwrote the existing option's namespace instead of raising (:issue:`29242`)
+- Bug in operations between an iterator and a :class:`DataFrame`, :class:`Series`, :class:`Index` or :class:`ExtensionArray` raising, or consuming it element-wise, instead of treating it as scalar-like (:issue:`31646`)
 - Bug in the ``display.max_colwidth`` option where values smaller than ``4`` were silently ignored, leaving the repr untruncated and its column headers misaligned (:issue:`16097`)
 - Bug in warning ``stacklevel`` resolution where warnings raised on behalf of user code living in a third-party package whose install directory merely starts with ``pandas`` (e.g. ``pandas_ta``) pointed past the real caller (:issue:`67992`)
 
