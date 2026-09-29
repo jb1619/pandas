@@ -4549,14 +4549,17 @@ def test_from_sequence_of_strings_none_float():
     tm.assert_extension_array_equal(result, expected)
 
 
-@pytest.mark.parametrize("box", [list, np.array, pd.Series])
+@pytest.mark.parametrize("box", [list, np.array, pd.Series, pa.array])
 def test_from_sequence_of_strings_decimal(box):
     # GH#69838 float64 cannot hold every decimal, so parse without it
-    strings = box(np.array(["1.23456789012345678901", None, "-2.5"], dtype=object))
+    strings = box(
+        np.array(["1.23456789012345678901", None, " -2.5", "3 "], dtype=object)
+    )
     dtype = ArrowDtype(pa.decimal128(30, 20))
     result = ArrowExtensionArray._from_sequence_of_strings(strings, dtype=dtype)
     expected = pd.array(
-        [Decimal("1.23456789012345678901"), None, Decimal("-2.5")], dtype=dtype
+        [Decimal("1.23456789012345678901"), None, Decimal("-2.5"), Decimal("3")],
+        dtype=dtype,
     )
     tm.assert_extension_array_equal(result, expected)
 
