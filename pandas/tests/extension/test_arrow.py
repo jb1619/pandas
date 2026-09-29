@@ -4551,7 +4551,7 @@ def test_from_sequence_of_strings_none_float():
 
 @pytest.mark.parametrize("box", [list, np.array, pd.Series])
 def test_from_sequence_of_strings_decimal(box):
-    # GH#69811 float64 cannot hold every decimal, so parse without it
+    # GH#69838 float64 cannot hold every decimal, so parse without it
     strings = box(np.array(["1.23456789012345678901", None, "-2.5"], dtype=object))
     dtype = ArrowDtype(pa.decimal128(30, 20))
     result = ArrowExtensionArray._from_sequence_of_strings(strings, dtype=dtype)
@@ -4563,7 +4563,7 @@ def test_from_sequence_of_strings_decimal(box):
 
 @pytest.mark.parametrize("value", ["", "0x1F", "1.005"])
 def test_from_sequence_of_strings_decimal_invalid(value):
-    # GH#69811 the last one needs more digits than the scale allows
+    # GH#69838 the last one needs more digits than the scale allows
     dtype = ArrowDtype(pa.decimal128(10, 2))
     with pytest.raises(pa.ArrowInvalid, match="[Dd]ecimal"):
         ArrowExtensionArray._from_sequence_of_strings(["1.5", value], dtype=dtype)
