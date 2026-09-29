@@ -4564,6 +4564,18 @@ def test_from_sequence_of_strings_decimal(box):
     tm.assert_extension_array_equal(result, expected)
 
 
+@pytest.mark.parametrize(
+    "pa_type", [pa.string(), pa.large_string(), pa.string_view(), pa.binary()]
+)
+def test_from_sequence_of_strings_decimal_pa_string_types(pa_type):
+    # GH#69838
+    strings = pa.array([" 1.5", None], type=pa_type)
+    dtype = ArrowDtype(pa.decimal128(10, 2))
+    result = ArrowExtensionArray._from_sequence_of_strings(strings, dtype=dtype)
+    expected = pd.array([Decimal("1.5"), None], dtype=dtype)
+    tm.assert_extension_array_equal(result, expected)
+
+
 @pytest.mark.parametrize("value", ["", "0x1F", "1.005"])
 def test_from_sequence_of_strings_decimal_invalid(value):
     # GH#69838 the last one needs more digits than the scale allows
