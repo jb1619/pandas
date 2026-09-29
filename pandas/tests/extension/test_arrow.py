@@ -38,6 +38,7 @@ from pandas._libs.tslibs import timezones
 from pandas.compat import (
     PY312,
     is_platform_windows,
+    pa_version_under18p0,
     pa_version_under19p0,
     pa_version_under20p0,
     pa_version_under21p0,
@@ -4565,7 +4566,21 @@ def test_from_sequence_of_strings_decimal(box):
 
 
 @pytest.mark.parametrize(
-    "pa_type", [pa.string(), pa.large_string(), pa.string_view(), pa.binary()]
+    "pa_type",
+    [
+        pa.string(),
+        pa.large_string(),
+        pytest.param(
+            pa.string_view(),
+            marks=pytest.mark.xfail(
+                pa_version_under18p0,
+                reason="string_view cast to string added in pyarrow 18",
+                raises=pa.ArrowNotImplementedError,
+                strict=True,
+            ),
+        ),
+        pa.binary(),
+    ],
 )
 def test_from_sequence_of_strings_decimal_pa_string_types(pa_type):
     # GH#69838
