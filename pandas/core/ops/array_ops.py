@@ -36,7 +36,6 @@ from pandas.core.dtypes.cast import (
 from pandas.core.dtypes.common import (
     ensure_object,
     is_bool_dtype,
-    is_list_like,
     is_numeric_v_string_like,
     is_object_dtype,
     is_scalar,
@@ -58,6 +57,10 @@ from pandas.core.construction import (
     sanitize_array,
 )
 from pandas.core.ops import missing
+from pandas.core.ops.common import (
+    is_listlike_for_op,
+    is_scalar_for_op,
+)
 from pandas.core.ops.dispatch import should_extension_dispatch
 from pandas.core.ops.invalid import (
     disallow_datetimelike_logical_op,
@@ -168,7 +171,7 @@ def _masked_arith_op(x: np.ndarray, y, op) -> np.ndarray:
             result[mask] = op(xrav[mask], yrav[mask])
 
     else:
-        if not is_scalar(y):
+        if not is_scalar_for_op(y):
             raise TypeError(
                 f"Cannot broadcast np.ndarray with operand of type {type(y)}"
             )
@@ -375,7 +378,7 @@ def na_logical_op(x: np.ndarray, y, op):
         # Then Cases where this goes through without raising include:
         #  (xint or xbool) and (yint or bool)
         result = op(x, y)
-    except TypeError:
+    except TypeError as type_err:
         if isinstance(y, np.ndarray):
             # bool-bool dtype operations should be OK, should not get here
             assert not (x.dtype.kind == "b" and y.dtype.kind == "b")
@@ -383,8 +386,16 @@ def na_logical_op(x: np.ndarray, y, op):
             y = ensure_object(y)
             result = libops.vec_binop(x.ravel(), y.ravel(), op)
         else:
+            # name the operand the user passed, before bool() below rewrites it
+            msg = (
+                f"Cannot perform '{op.__name__}' with a dtyped [{x.dtype}] array "
+                f"and scalar of type [{type(y).__name__}]"
+            )
+            if not lib.is_scalar(y):
+                # GH#31646 y is scalar-like only in that we cannot align it
+                #  element-wise; bool(y) would answer True for e.g. a generator
+                raise TypeError(msg) from type_err
             # let null fall thru
-            assert lib.is_scalar(y)
             if not isna(y):
                 y = bool(y)
             try:
@@ -396,11 +407,7 @@ def na_logical_op(x: np.ndarray, y, op):
                 OverflowError,
                 NotImplementedError,
             ) as err:
-                typ = type(y).__name__
-                raise TypeError(
-                    f"Cannot perform '{op.__name__}' with a dtyped [{x.dtype}] array "
-                    f"and scalar of type [{typ}]"
-                ) from err
+                raise TypeError(msg) from err
 
     return result.reshape(x.shape)
 
@@ -436,8 +443,8 @@ def logical_op(left: ArrayLike, right: Any, op) -> ArrayLike:
         return x
 
     right = lib.item_from_zerodim(right)
-    if is_list_like(right) and not hasattr(right, "dtype"):
-        # e.g. list, tuple
+    if is_listlike_for_op(right) and not hasattr(right, "dtype"):
+        # e.g. list, tuple; an iterator is scalar-like here (GH#31646)
         raise TypeError(
             # GH#52264
             "Logical ops (and, or, xor) between Pandas objects and dtype-less "

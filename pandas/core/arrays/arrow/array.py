@@ -1323,7 +1323,8 @@ class ArrowExtensionArray(
                         result = ops.invalid_comparison(self, other, op)
                         result = pa.array(result, type=pa.bool_())
 
-        elif is_scalar(other):
+        elif is_scalar(other) or lib.is_iterator(other):
+            # GH#31646 an iterator has no length, so it is scalar-like here
             if (isinstance(other, datetime) and pa.types.is_date(ltype)) or (
                 type(other) is date and pa.types.is_timestamp(ltype)
             ):
@@ -1332,7 +1333,8 @@ class ArrowExtensionArray(
                 result = pa.array(result, type=pa.bool_())
             else:
                 try:
-                    result = pc_func(self._pa_array, self._box_pa(other))
+                    # _box_pa would drain an iterator into an array
+                    result = pc_func(self._pa_array, self._box_pa_scalar(other))
                 except (pa.lib.ArrowNotImplementedError, pa.lib.ArrowInvalid):
                     mask = isna(self) | isna(other)
                     valid = ~mask
@@ -1362,7 +1364,7 @@ class ArrowExtensionArray(
 
     def _evaluate_op_method(self, other, op, arrow_funcs) -> Self:
         if (
-            is_list_like(other)
+            ops.is_listlike_for_op(other)
             and not isinstance(other, (np.ndarray, ExtensionArray, list))
             and not ops.has_castable_attr(other)
         ):
@@ -1378,7 +1380,12 @@ class ArrowExtensionArray(
         pa_type = self._pa_array.type
         other_original = other
         ops.raise_if_2d(other)
-        other = self._box_pa(other)
+        if lib.is_iterator(other):
+            # GH#31646 boxing an iterator as an array consumes it, and never
+            #  returns for an endless one
+            other = self._box_pa_scalar(other)
+        else:
+            other = self._box_pa(other)
 
         if (
             pa.types.is_string(pa_type)
@@ -1491,7 +1498,7 @@ class ArrowExtensionArray(
         mask = isna(self) | isna(other)
         valid = ~mask
 
-        if is_list_like(other):
+        if ops.is_listlike_for_op(other):
             if len(other) != len(self):
                 raise ValueError(
                     f"Lengths of operands do not match: {len(self)} != {len(other)}"
