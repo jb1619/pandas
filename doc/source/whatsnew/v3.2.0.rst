@@ -107,8 +107,7 @@ deprecation2
 
 Other deprecations
 ^^^^^^^^^^^^^^^^^^
--
--
+- Deprecated arithmetic, comparison, and logical operations between pandas objects (:class:`DataFrame`, :class:`Series`, :class:`Index`, and pandas-implemented :class:`ExtensionArray` subclasses) and list-likes other than ``list``, ``np.ndarray``, :class:`ExtensionArray`, :class:`Index`, :class:`Series`, :class:`DataFrame`. For e.g. ``tuple`` or ``range``, explicitly cast these to a supported object instead. In a future version, these will be treated as scalar-like for pointwise operation (:issue:`62423`). Iterators are treated as scalar-like already (:issue:`31646`)
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_320.performance:
@@ -206,8 +205,7 @@ Reshaping
 
 Sparse
 ^^^^^^
--
--
+- Bug in operations between a ``Sparse`` dtype and an object that is neither list-like nor a recognized scalar raising ``ValueError`` about mismatched lengths, or ``TypeError`` on the operand's missing length, instead of operating against it as a scalar (:issue:`31646`)
 
 ExtensionArray
 ^^^^^^^^^^^^^^
@@ -224,8 +222,8 @@ Other
 
 .. ***DO NOT USE THIS SECTION***
 
--
--
+- Bug in ``&``, ``|`` and ``^`` between a :class:`Series`, :class:`Index` or :class:`DataFrame` and an object that is neither list-like nor a recognized scalar raising a bare ``AssertionError`` instead of ``TypeError`` (:issue:`31646`)
+- Bug in operations between an iterator and a :class:`DataFrame`, :class:`Series`, :class:`Index` or :class:`ExtensionArray` raising, or consuming it element-wise, instead of treating it as scalar-like (:issue:`31646`)
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_320.contributors:
