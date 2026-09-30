@@ -115,8 +115,7 @@ Other deprecations
 
 Performance improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~
--
--
+- Performance improvement and reduced memory usage in :meth:`DataFrame.loc` and :meth:`Series.loc` with a :class:`MultiIndex` when selecting on the first level with ``slice(None)`` for the remaining levels (:issue:`52714`)
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_320.bug_fixes:
