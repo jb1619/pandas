@@ -28,8 +28,7 @@ enhancement2
 
 Other enhancements
 ^^^^^^^^^^^^^^^^^^
--
--
+- Added :class:`api.extensions.Accessor` to the public API, for adding or overriding an accessor on a single class such as a :class:`DataFrame` subclass (:issue:`40103`)
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_320.notable_bug_fixes:
@@ -107,8 +106,7 @@ deprecation2
 
 Other deprecations
 ^^^^^^^^^^^^^^^^^^
--
--
+- Deprecated ``pandas.core.accessor.CachedAccessor``, use :class:`api.extensions.Accessor` instead (:issue:`66215`).
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_320.performance:
