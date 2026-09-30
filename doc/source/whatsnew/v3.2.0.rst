@@ -28,8 +28,7 @@ enhancement2
 
 Other enhancements
 ^^^^^^^^^^^^^^^^^^
--
--
+- :func:`array` and :meth:`Series.astype` with ``dtype="boolean"`` now accept numeric values other than 0 and 1, treating nonzero values as ``True`` like NumPy's ``bool`` dtype (:issue:`37614`)
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_320.notable_bug_fixes:
