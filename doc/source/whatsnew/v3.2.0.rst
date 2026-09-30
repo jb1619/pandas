@@ -164,7 +164,7 @@ Interval
 
 Indexing
 ^^^^^^^^
--
+- Bug in :meth:`DataFrame.iloc` raising ``ValueError: The truth value of a Series is ambiguous`` when setting a single column of a :class:`DataFrame` with duplicated :class:`~pandas.MultiIndex` column labels (:issue:`69959`)
 -
 
 Missing
