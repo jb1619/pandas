@@ -1723,13 +1723,40 @@ def test_groupby_complex(func, output):
     tm.assert_series_equal(result, expected)
 
 
-@pytest.mark.parametrize("func", ["min", "max", "var"])
+@pytest.mark.parametrize(
+    "func",
+    [
+        "min",
+        "max",
+        "var",
+        "std",
+        "sem",
+        "median",
+        "skew",
+        "kurt",
+        "idxmin",
+        "idxmax",
+        "quantile",
+        "cummin",
+        "cummax",
+        "rank",
+        "ohlc",
+    ],
+)
 def test_groupby_complex_raises(func):
-    # GH#43701
+    # GH#43701, GH#43770 std/sem/median/skew/kurt must raise, not discard the
+    #  imaginary part
     data = pd.Series(np.arange(20).reshape(10, 2).dot([1, 2j]))
-    msg = "No matching signature found"
+    msg = f"dtype 'complex128' does not support operation '{func}'"
     with pytest.raises(TypeError, match=msg):
         data.groupby(data.index % 2).agg(func)
+
+    with pytest.raises(TypeError, match=msg):
+        getattr(data.groupby(data.index % 2), func)()
+
+    frame = data.to_frame("a")
+    with pytest.raises(TypeError, match=msg):
+        getattr(frame.groupby(frame.index % 2), func)()
 
 
 @pytest.mark.parametrize(
