@@ -28,8 +28,7 @@ enhancement2
 
 Other enhancements
 ^^^^^^^^^^^^^^^^^^
--
--
+- Display formatting for complex numbers in ``object`` dtype and for ``interval`` dtype values with float endpoints now respects the ``display.precision`` and ``display.float_format`` options (:issue:`25920`).
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_320.notable_bug_fixes:

@@ -1990,6 +1990,43 @@ def test_precision_float_in_object_index():
     assert "0.55555555" not in result
 
 
+def test_precision_complex_in_object_column():
+    # GH#25920
+    float_val = 0.55555555
+    df = pd.DataFrame(
+        [float_val, complex(float_val, -float_val), (float_val, float_val)]
+    )
+    with pd.option_context("display.precision", 3):
+        result = repr(df)
+    expected = (
+        "                0\n0           0.556\n1  (0.556-0.556j)\n2  (0.556, 0.556)"
+    )
+    assert result == expected
+
+
+def test_float_format_complex_in_object_column():
+    # GH#25920 float_format is applied to each part, so float-only callables work
+    ser = pd.Series([0.5, 0.5 + 0.5j, 1 - 2j], dtype=object)
+    with pd.option_context("display.float_format", lambda x: f"{float(x):.2f}"):
+        result = repr(ser)
+    expected = "0            0.50\n1    (0.50+0.50j)\n2    (1.00-2.00j)\ndtype: object"
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "box, expected",
+    [
+        (pd.Series, "0    (1.00+1.00j)\n1               x"),
+        (pd.DataFrame, "0  (1.00+1.00j)\n1             x"),
+    ],
+)
+def test_float_format_percent_str_complex_in_object_column(box, expected):
+    # GH#25920
+    obj = box([1 + 1j, "x"], dtype=object)
+    result = obj.to_string(float_format="%.2f", header=False)
+    assert result == expected
+
+
 @pytest.mark.parametrize("method", [repr, lambda obj: obj.to_html()])
 def test_precision_float_index_names(method):
     # GH#25917
